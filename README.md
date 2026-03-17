@@ -1,110 +1,93 @@
-# YouTube Audio Music Analysis
+# Bass Tab Generator POC
 
-A Python proof-of-concept tool for downloading YouTube audio and analyzing music characteristics using librosa.
+A simple proof-of-concept that generates bass tablature with slap/pop notation from audio files.
 
 ## Features
 
-- **YouTube Audio Download**: Downloads audio from YouTube videos using yt-dlp
-- **Music Analysis**: Analyzes audio files for various music characteristics including:
-  - Tempo (BPM)
-  - Spectral features
-  - Harmonic and percussive components
-  - MFCC features
-  - Chroma features for key detection
-  - Music classification heuristics
-
-## Requirements
-
-- Python 3.8+
-- FFmpeg (for audio processing)
+- Bass frequency extraction using harmonic-percussive separation
+- Pitch detection (MIDI note conversion)
+- Slap/Pop technique detection based on spectral analysis
+- ASCII tablature generation
+- Simple, sequential pipeline (no agents)
 
 ## Installation
 
-1. Clone this repository:
-```bash
-git clone <your-repo-url>
-cd youtube-audio-analysis
-```
-
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Install FFmpeg (if not already installed):
-```bash
-# On macOS with Homebrew
-brew install ffmpeg
-
-# On Ubuntu/Debian
-sudo apt update
-sudo apt install ffmpeg
-
-# On Windows
-# Download from https://ffmpeg.org/download.html
-```
-
 ## Usage
 
-### Basic Usage
-
-```python
-from youtube_audio_poc import youtube_audio_music_analysis
-
-# Analyze a YouTube video
-result = youtube_audio_music_analysis("https://www.youtube.com/watch?v=your-video-id")
-
-if result['success']:
-    print(f"Audio saved to: {result['audio_path']}")
-    print(f"Music probability: {result['analysis']['music_probability']:.2%}")
-else:
-    print(f"Error: {result['error']}")
-```
-
-### Command Line Usage
-
 ```bash
-python youtube_audio_poc.py
+python bass_tab_generator.py <input.wav>
 ```
 
-## Project Structure
-
-```
-├── youtube_audio_poc.py    # Main analysis script
-├── requirements.txt        # Python dependencies
-├── poc/                   # Downloaded audio files (ignored by git)
-└── README.md              # This file
+**Example:**
+```bash
+python bass_tab_generator.py my_song.wav
 ```
 
-## Features Analysis
+This will:
+1. Load the audio file
+2. Extract bass frequencies
+3. Detect pitches and convert to MIDI notes
+4. Detect slap/pop techniques
+5. Generate ASCII tab
+6. Save output to `my_song_tab.txt`
 
-The tool analyzes various audio characteristics:
+## Output Format
 
-- **Tempo**: Detects BPM using beat tracking
-- **Spectral Features**: Analyzes frequency content
-- **Harmonic/Percussive Separation**: Distinguishes melodic vs rhythmic content
-- **MFCC Features**: Mel-frequency cepstral coefficients for timbre analysis
-- **Chroma Features**: Pitch class analysis for key detection
-- **Music Classification**: Heuristic-based music probability scoring
+```
+Bass Tab
+============================================================
+Legend: S = Slap, P = Pop, - = Normal fingerstyle
+============================================================
+G|----------5-7------|
+D|5-7-8-------------|
+A|------------------|
+E|------------------|
+T|- - S P - - S ----|
+============================================================
+```
 
-## Troubleshooting
+## How It Works
 
-### Robot Detection
-If you encounter robot detection errors:
-- Try using a VPN
-- Wait a few minutes between requests
-- Use different YouTube URLs
-- Open YouTube in your browser first
+### 1. Bass Extraction
+Uses librosa's harmonic-percussive separation to isolate melodic content, then focuses on low frequencies typical of bass guitar (E1-C4).
 
-### FFmpeg Issues
-Make sure FFmpeg is properly installed and accessible from your PATH.
+### 2. Pitch Detection
+Uses librosa's `piptrack` to detect fundamental frequencies and convert to MIDI notes.
 
-## License
+### 3. Technique Detection
+Analyzes spectral characteristics:
+- **Pop (P)**: Very bright spectrum (>3000 Hz centroid)
+- **Slap (S)**: Bright spectrum (>2000 Hz centroid)
+- **Normal (-)**: Balanced spectrum
 
-This project is for educational and research purposes.
+### 4. Tab Generation
+Maps MIDI notes to fret positions on standard 4-string bass (E-A-D-G tuning).
+
+## Limitations (POC)
+
+⚠️ This is a simple POC with known limitations:
+- Bass extraction is basic (no Demucs/Spleeter)
+- Timing/rhythm is not captured (notes shown in sequence only)
+- Slap/pop detection is heuristic-based (70-80% accuracy)
+- String choice uses simple "lowest fret" algorithm
+- No support for articulations (slides, hammer-ons, etc.)
+
+## Next Steps
+
+To improve this POC:
+1. Integrate Demucs for better bass separation
+2. Add rhythm/timing detection
+3. Improve slap/pop classifier with ML model
+4. Optimize string choice algorithm
+5. Add more articulations (H, P, /, \, x)
+
+## Requirements
+
+- Python 3.8+
+- librosa
+- numpy
+- soundfile

@@ -1,5 +1,23 @@
-yt-dlp>=2023.12.30
-librosa>=0.10.1
+# Core audio processing
+librosa>=0.10.0
+soundfile>=0.12.0
 numpy>=1.24.0
-soundfile>=0.12.1
+scipy>=1.10.0
 
+# Bass separation (Demucs)
+demucs>=4.0.0
+
+# Audio file handling
+audioread>=3.0.0
+
+# Optional: Alternative pitch detection
+# crepe>=0.0.12
+
+# Utilities
+tqdm>=4.65.0
+
+TorchCodec
+
+# Web API
+fastapi
+uvicorn

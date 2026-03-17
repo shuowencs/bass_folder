@@ -1,5 +1,6 @@
 import os
 import tempfile
+import re
 import librosa
 import numpy as np
 import yt_dlp
@@ -30,9 +31,19 @@ def download_youtube_audio(url, output_dir=None):
         os.makedirs(output_dir, exist_ok=True)
         print(f"📁 Output directory set to: {output_dir}")
     
+    # Extract video ID from URL (remove playlist parameters)
+    video_id_match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*', url)
+    if video_id_match:
+        clean_url = f"https://www.youtube.com/watch?v={video_id_match.group(1)}"
+        print(f"🔗 Cleaned URL (removed playlist params): {clean_url}")
+        url = clean_url
+    
     # Configure yt-dlp options with anti-bot measures and FFmpeg post-processing
+# Configure yt-dlp options with anti-bot measures and FFmpeg post-processing
     ydl_opts = {
+        # Simplified, more robust format selector - AUDIO ONLY
         'format': 'bestaudio/best',
+        
         # Always produce wav using FFmpegAudioConvertor
         'outtmpl': os.path.join(output_dir, '%(title)s.%(ext)s'),
         'postprocessors': [
@@ -45,15 +56,18 @@ def download_youtube_audio(url, output_dir=None):
         'noplaylist': True,
         'quiet': False,
         'no_warnings': False,
+        
         # Anti-bot measures
-        'cookiesfrombrowser': ('chrome',),  # Use browser cookies
+        # 'cookiesfrombrowser': ('chrome',),  # Commented out - can cause issues
         'sleep_interval': 1,  # Add delay between requests
         'max_sleep_interval': 5,
         'sleep_interval_subtitles': 1,
+        
         # User agent to appear more like a real browser
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         },
+        
         # Retry options
         'retries': 3,
         'fragment_retries': 3,
@@ -117,6 +131,14 @@ def download_youtube_audio(url, output_dir=None):
         elif "age" in error_msg.lower() or "restricted" in error_msg.lower():
             print("\n👶 AGE-RESTRICTED VIDEO!")
             print("This video has age restrictions. Try a different video.")
+            
+        elif "format" in error_msg.lower() and "not available" in error_msg.lower():
+            print("\n📹 FORMAT NOT AVAILABLE!")
+            print("The requested audio format is not available for this video.")
+            print("\n💡 SOLUTIONS:")
+            print("1. Try a different YouTube video URL")
+            print("2. The video might be a live stream or have format restrictions")
+            print("3. Try using a simpler URL without playlist parameters")
             
         else:
             print(f"\n🔧 GENERAL ERROR: {error_msg}")
